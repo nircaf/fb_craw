@@ -15,7 +15,7 @@ import json
 import time
 import re
 
-def openComment(browser):    
+def openComment(browser):
     moreComment = browser.find_elements(By.XPATH, "//span[contains(@class,'d2edcug0 hpfvmrgz qv66sw1b c1et5uql oi732d6d ik7dh3pa ht8s03o8 a8c37x1j keod5gw0 nxhoafnm aigsh9s9 d9wwppkn fe6kdd0r mau55g9w c8b282yb iv3no6db jq4qci2q a3bd9o3v lrazzd5p m9osqain') and starts-with(text(), 'View') and contains(text(), 'more comment')]")
     if len(moreComment) > 0:
         count = 0
@@ -36,7 +36,7 @@ def openComment(browser):
     else:
         pass
 
-      
+
 def openReply(browser):
     replies = browser.find_elements(By.XPATH, "//div[@class='rq0escxv l9j0dhe7 du4w35lb j83agx80 cbu4d94t pfnyh3mw d2edcug0 hpfvmrgz n8tt0mok hyh9befq r8blr3vg jwdofwj8 g0qnabr5']")
     if len(replies) > 0:
@@ -61,7 +61,7 @@ def openReply(browser):
 
 def openReply2(browser):
     replies = browser.find_elements(By.XPATH, "//span[@class='d2edcug0 hpfvmrgz qv66sw1b c1et5uql oi732d6d ik7dh3pa ht8s03o8 a8c37x1j keod5gw0 nxhoafnm aigsh9s9 d9wwppkn fe6kdd0r mau55g9w c8b282yb iv3no6db jq4qci2q a3bd9o3v lrazzd5p m9osqain' and contains(text(),'more repl')]")
-    if len(replies) > 0: 
+    if len(replies) > 0:
         count = 0
         for i in replies:
             action=ActionChains(browser)
@@ -80,10 +80,10 @@ def openReply2(browser):
     else:
         pass
 
-      
+
 def openSeeMore(browser):
     readMore = browser.find_elements(By.XPATH, "//div[contains(@class,'oajrlxb2 g5ia77u1 qu0x051f esr5mh6w e9989ue4 r7d6kgcz rq0escxv nhd2j8a9 nc684nl6 p7hjln8o kvgmc6g5 cxmmr5t8 oygrvhab hcukyx3x jb3vyjys rz4wbd8a qt6c0cv9 a8nywdso i1ao9s8h esuyzwwr f1sip0of lzcic4wl oo9gr5id gpro0wi8 lrazzd5p') and contains(text(), 'See More')]")
-    if len(readMore) > 0:    
+    if len(readMore) > 0:
         count = 0
         for i in readMore:
             action=ActionChains(browser)
@@ -111,14 +111,14 @@ def getBack(browser):
 def archiveAtEnd(browser, reviewList):
     browser.execute_script("window.scrollTo(0, -document.body.scrollHeight);") # scroll back to the top
     time.sleep(10)
-        
+
     for idx, l in enumerate(reviewList):
         if idx % 10 == 0:
             if idx < 15:
                 browser.execute_script("arguments[0].scrollIntoView();", reviewList[0])
             else:
                 browser.execute_script("arguments[0].scrollIntoView();", reviewList[idx-15])
-            
+
             time.sleep(1)
             try:
                 browser.execute_script("arguments[0].scrollIntoView();", reviewList[idx+15])
@@ -127,7 +127,7 @@ def archiveAtEnd(browser, reviewList):
 
             time.sleep(1)
             browser.execute_script("arguments[0].scrollIntoView();", reviewList[idx])
-            
+
             for r in range(2):
                 time.sleep(3)
                 try:
@@ -151,9 +151,9 @@ option.add_argument("start-maximized")
 option.add_argument("--disable-extensions")
 option.add_argument('--disable-notifications')
 # Pass the argument 1 to allow and 2 to block
-option.add_experimental_option("prefs", { 
-    "profile.default_content_setting_values.notifications": 2 
-})     
+option.add_experimental_option("prefs", {
+    "profile.default_content_setting_values.notifications": 2
+})
 browser = webdriver.Chrome(executable_path = r'chromedriver.exe', options=option)#, options=option)
 
 def fb_run():
