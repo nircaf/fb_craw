@@ -255,6 +255,6 @@ def send_whatsapp(all_numbers):
         time.sleep(5)
 
 if __name__ == '__main__':
-    # fb_run()
+    fb_run()
     txt_read = read_txt_file('filename.txt')
     send_whatsapp(txt_read)
