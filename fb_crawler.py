@@ -237,24 +237,24 @@ def send_whatsapp(all_numbers):
     all_numbers = all_numbers.split('\n')[:-1]
     message = " היי , מה נשמע? ראיתי את המספר שלך בקבוצת דוגווקרים בתל אביב. \
         אנחנו גרים על בתל אביב בן אביגדור ומחפשים מישהו שיגיע 2-3 ימים בשבוע בצהריים. הכלב בן שנה וחצי, אנרגטי, ידידותי עם כלבים אחרים. מחפשים לטווח ארוך. "
-    " נשמח אם יהיה ניתן ליצור קשר במידה ורלוונטי. תודה רבה! "
+    " נשמח לקבל פרטים נוספים אם רלוונטי. תודה רבה! "
     for index, number in enumerate(all_numbers):
-        # Goes to site
-        site = f"https://wa.me/{number}?text={message}"
-        browser.get(site)
-        if index == 0:
-            click_pyautogui(732 , 165)
-            time.sleep(1)
-            click_pyautogui(1025 , 225)
-        browser.find_element(By.XPATH,"//span[contains(text(),'Continue to Chat')]").click()
-        time.sleep(5)
-        # Clicks on the button
-
-
-        click_pyautogui(1876 , 980)
+        # run twice to make sure it works
+        for i in range(2):
+            # Goes to site
+            site = f"https://wa.me/{number}?text={message}"
+            browser.get(site)
+            if index == 0:
+                click_pyautogui(732 , 165)
+                time.sleep(1)
+                click_pyautogui(1025 , 225)
+            browser.find_element(By.XPATH,"//span[contains(text(),'Continue to Chat')]").click()
+            time.sleep(5)
+        # Clicks on the button to send message
+        click_pyautogui(1880 , 1000)
         time.sleep(5)
 
 if __name__ == '__main__':
-    fb_run()
+    # fb_run()
     txt_read = read_txt_file('filename.txt')
     send_whatsapp(txt_read)
