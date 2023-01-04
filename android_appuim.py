@@ -3,6 +3,10 @@ import subprocess
 import keyboard
 import time
 import random
+import yaml
+# read cred.yaml file
+with open(r'C:/Nir/meckano_auto/config.yaml') as f:
+    cfg = yaml.load(f, Loader=yaml.FullLoader)
 print('meckano started')
 randint = random.randint(60, 30*60)
 print('meckano will run after ' + str(randint/60) + ' minutes')
@@ -12,8 +16,8 @@ subprocess.Popen(r'C:\Program Files\BlueStacks_nxt\HD-Player.exe')
 def send_email(txt='meckano activated'):
     import smtplib
 
-    gmail_user = 'nir@shopperai.ai'
-    gmail_password = 'nir123Caf'
+    gmail_user = cfg['gmail_user']
+    gmail_password = cfg['gmail_password']
 
     sent_from = gmail_user
     to = ['nir@shopperai.ai']
@@ -54,4 +58,3 @@ pyautogui.sleep(2)
 pyautogui.click(3254, 274)
 pyautogui.sleep(2)
 send_email()
-
