@@ -65,7 +65,7 @@ def send_email(txt='meckano activated'):
 
 if __name__ == "__main__":
     print('meckano started')
-    randint = random.randint(60, 60*60)
+    randint = random.randint(60, 30*60)
     print('meckano will run after ' + str(randint/60) + ' minutes')
     time.sleep(randint) #inclucive
     try:
