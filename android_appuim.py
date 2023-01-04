@@ -6,6 +6,15 @@ import random
 import yaml
 import mss
 
+
+# Press the Enter key
+pyautogui.press('enter')
+#sleep for 2 seconds
+pyautogui.sleep(2)
+# Type the digits "123321456"
+pyautogui.typewrite('123321456')
+# Press the Enter key
+pyautogui.press('enter')
 # read cred.yaml file
 with open(r'C:/Nir/meckano_auto/cred.yaml') as f:
     cfg = yaml.load(f, Loader=yaml.FullLoader)
@@ -121,3 +130,5 @@ with mss.mss() as sct:
     mss.tools.to_png(sct_img.rgb, sct_img.size, output=name_png)
 
 send_email(name_png)
+# lock the computer
+pyautogui.hotkey('win', 'l')
