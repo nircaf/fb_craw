@@ -5,16 +5,19 @@ import time
 import random
 import yaml
 import mss
+from pynput import mouse
 
 
 # Press the Enter key
 pyautogui.press('enter')
 #sleep for 2 seconds
 pyautogui.sleep(2)
-# Type the digits "123321456"
-pyautogui.typewrite('123321456')
-# Press the Enter key
-pyautogui.press('enter')
+# # Type the digits "123321456"
+# pyautogui.typewrite('123321456')
+# # Press the Enter keyl
+# pyautogui.press('enter')
+# #sleep for 2 seconds
+# pyautogui.sleep(2)
 # read cred.yaml file
 with open(r'C:/Nir/meckano_auto/cred.yaml') as f:
     cfg = yaml.load(f, Loader=yaml.FullLoader)
@@ -22,33 +25,8 @@ print('meckano started')
 randint = random.randint(60, 30*60)
 print('meckano will run after ' + str(randint/60) + ' minutes')
 # time.sleep(randint) #inclucive
-subprocess.Popen(r'C:\Program Files\BlueStacks_nxt\HD-Player.exe')
-pyautogui.sleep(20)
-
-def send_email(txt='meckano activated'):
-    import smtplib
-
-    gmail_user = cfg['gmail_user']
-    gmail_password = cfg['gmail_password']
-
-    sent_from = gmail_user
-    to = ['nir@shopperai.ai']
-    subject = 'meckano activated'
-    body = f'Hey, what time {time.ctime()} \n {txt}'
-
-    email_text = """\
-    From: %s
-    To: %s
-    Subject: %s
-
-    %s
-    """ % (sent_from, ", ".join(to), subject, body)
-
-    server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
-    server.ehlo()
-    server.login(gmail_user, gmail_password)
-    server.sendmail(sent_from, to, email_text)
-    server.close()
+subprocess.Popen([r'C:\Program Files\BlueStacks_nxt\HD-Player.exe', '--instance', 'Nougat32', '--cmd', 'launchApp', '--package', 'com.kfir.Meckano'])
+pyautogui.sleep(30)
 
 
 def send_email(filenam,txt='meckano activated'):
@@ -105,21 +83,18 @@ def send_email(filenam,txt='meckano activated'):
         server.login(sender_email, password)
         server.sendmail(sender_email, receiver_email, text)
 
-# get in the app
-# click at 3352, 180
-pyautogui.click(3352, 180)
-pyautogui.sleep(5)
 # press on new shift
 # click at 3182, 423
 pyautogui.click(3182, 423)
 pyautogui.sleep(5)
+
 # log in/out
 # click at 3254, 274
-# pyautogui.click(3254, 274)
-# pyautogui.sleep(5)
+pyautogui.click(3254, 274)
+pyautogui.sleep(5)
+
 # take screenshot
 # Save the screenshot as a PNG file
-
 name_png = 'screenshot.png'
 
 with mss.mss() as sct:
