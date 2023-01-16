@@ -7,15 +7,7 @@ import yaml
 import mss
 from pynput import mouse
 
-
-# Press the Enter key
-pyautogui.press('enter')
-#sleep for 2 seconds
-pyautogui.sleep(2)
-# # Type the digits "123321456"
-# pyautogui.typewrite('123321456')
-# # Press the Enter keyl
-# pyautogui.press('enter')
+pyautogui.PAUSE = 2
 # #sleep for 2 seconds
 # pyautogui.sleep(2)
 # read cred.yaml file
@@ -26,7 +18,7 @@ randint = random.randint(60, 30*60)
 print('meckano will run after ' + str(randint/60) + ' minutes')
 # time.sleep(randint) #inclucive
 subprocess.Popen([r'C:\Program Files\BlueStacks_nxt\HD-Player.exe', '--instance', 'Nougat32', '--cmd', 'launchApp', '--package', 'com.kfir.Meckano'])
-pyautogui.sleep(30)
+pyautogui.sleep(20)
 
 
 def send_email(filenam,txt='meckano activated'):
@@ -83,27 +75,32 @@ def send_email(filenam,txt='meckano activated'):
         server.login(sender_email, password)
         server.sendmail(sender_email, receiver_email, text)
 
-# press on new shift
-# click at 3182, 423
-pyautogui.click(3182, 423)
-pyautogui.sleep(5)
-
+# Press the F11
+pyautogui.press('f11')
+print('meckano full screen')
+# pyautogui pause 3 sec
+time.sleep(2)
 # log in/out
-# click at 3254, 274
-pyautogui.click(3254, 274)
-pyautogui.sleep(5)
+# click 3 times
+pyautogui.click(1000,300,button='left', clicks=3, interval=0.25)
+print('meckano logged in')
+# sleep
+time.sleep(2)
 
 # take screenshot
 # Save the screenshot as a PNG file
 name_png = 'screenshot.png'
 
+
+
 with mss.mss() as sct:
-    monitor = {"top": 100, "left": 3000, "width": 1000, "height": 500, "mon": 2}
+    monitor = {"top": 100, "left": 500, "width": 1000, "height": 500, "mon": 1}
     # Grab the data
     sct_img = sct.grab(monitor)
     # Save to the picture file
     mss.tools.to_png(sct_img.rgb, sct_img.size, output=name_png)
+# sleep
 
+time.sleep(2)
 send_email(name_png)
-# lock the computer
-pyautogui.hotkey('win', 'l')
+print('meckano screenshot sent')
