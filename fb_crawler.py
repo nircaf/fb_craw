@@ -173,7 +173,8 @@ def fb_run():
 
     time.sleep(5)
 
-    browser.get('https://www.facebook.com/groups/DogWalkerTLV/') # once logged in, free to open up any target page
+    # browser.get('https://www.facebook.com/groups/DogWalkerTLV/') # once logged in, free to open up any target page
+    browser.get('https://www.facebook.com/groups/1629283237109586/') # הובלות, הובלות קטנות, הובלות דירות, הרכבות, מובילים ממומלצים, חיפוש מובילים
 
     time.sleep(5)
 
@@ -181,17 +182,30 @@ def fb_run():
 
     Bool_try = True
     numbers = []
-    for i in range(10):
+    for i in range(30):
         print(f' i = {i}')
-        try:
-            for run in range(4):
-                print(f'run: {run+i}')
-                try:
-                    link = browser.find_element(By.XPATH,"//span[contains(text(),'View') and contains(text(),'more comment')]").click() # find the link
-                except:
-                    pass
-                browser.implicitly_wait(10)
-                browser.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        for run in range(4):
+            print(f'run: {run+i}')
+            try:
+                xpath_ele = "//span[contains(text(),'View') and contains(text(),'more comment')]"
+                # get all elements with the xpath
+                elements = browser.find_elements(By.XPATH, xpath_ele)
+                # click the last element
+                elements[-1].click()
+                # link = browser.find_element(By.XPATH,xpath_ele).click() # find the link
+            except:
+                pass
+            browser.implicitly_wait(10)
+            browser.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            link = browser.find_element(By.XPATH,"//*").text
+            all_numbers = re.findall(r'\d{10,12}', link)
+            numbers.extend(all_numbers)
+            try:
+                # close post
+                element = browser.find_element(By.XPATH, '//*[contains(@d, "M18.707")]')
+                element.click()
+            except:
+                pass
             # browser.implicitly_wait(10)
             # link = browser.find_element(By.XPATH,"//span[contains(text(),'View') and contains(text(),'more comment')]").click() # find the link
             browser.implicitly_wait(10)
@@ -201,12 +215,13 @@ def fb_run():
             link = browser.find_element(By.XPATH,"//*").text
             all_numbers = re.findall(r'\d{10,12}', link)
             numbers.extend(all_numbers)
-        except:
-            Bool_try = False
 
     print(numbers)
     res = [*set(numbers)]
     print("List after removing duplicate elements: ", res)
+    # clean with open("filename.txt", "r+") as file:
+    with open("filename.txt", "w") as file:
+        pass
     for number in numbers:
         if number[:3]=='972' and len(number)==12:
             write_num_to_txt(number)
@@ -233,11 +248,14 @@ def click_pyautogui(x, y):
     pyautogui.moveTo(x, y)
     pyautogui.click()
 
+
 def send_whatsapp(all_numbers):
     all_numbers = all_numbers.split('\n')[:-1]
-    message = " היי , מה נשמע? ראיתי את המספר שלך בקבוצת דוגווקרים בתל אביב. \
-        אנחנו גרים על בתל אביב בן אביגדור ומחפשים מישהו שיגיע 2-3 ימים בשבוע בצהריים. הכלב בן שנה וחצי, אנרגטי, ידידותי עם כלבים אחרים. מחפשים לטווח ארוך. "
-    " נשמח לקבל פרטים נוספים אם רלוונטי. תודה רבה! "
+    # message = " היי , מה נשמע? ראיתי את המספר שלך בקבוצת דוגווקרים בתל אביב. \
+    #     אנחנו גרים על בתל אביב בן אביגדור ומחפשים מישהו שיגיע 2-3 ימים בשבוע בצהריים. הכלב בן שנה וחצי, אנרגטי, ידידותי עם כלבים אחרים. מחפשים לטווח ארוך. "
+    # " נשמח לקבל פרטים נוספים אם רלוונטי. תודה רבה! "
+    message = """ היי, אשמח להצעת מחיר למעבר של דירת 2 חדרים. מזרן 160,מיטה, שולחן,6 כיסאות, מכונת כביסה, ארון 200על80 וארון 180על60 ואיזור ה20 ארגזים. מקומה 1 עם מעלית בן אביגדור תל אביב
+    לקומה 3 עם מעלית בשלמה המלך תל אביב מרחק של 3 קמ. המעבר ביום שישי ה9.6 בבוקר. תודה רבה. """
     for index, number in enumerate(all_numbers):
         # run twice to make sure it works
         for i in range(2):
