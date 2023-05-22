@@ -1,9 +1,11 @@
+# git submodule update --init --recursive
+git submodule update --remote
+
 #!/bin/bash
-pre-commit run --all-files
-read MESSAGE
+for i in {1..3};do pre-commit run --all-files;done
+git checkout main
 git pull
 git add .
+read -p "Please enter commit message: " MESSAGE
 git commit -m "$MESSAGE"
-git push
-echo "Done"
-read -p "Press any key to continue..."
+git push # push nir branch

@@ -195,7 +195,7 @@ def fb_run():
                 # link = browser.find_element(By.XPATH,xpath_ele).click() # find the link
             except:
                 pass
-            browser.implicitly_wait(10)
+            browser.implicitly_wait(3)
             browser.execute_script("window.scrollTo(0, document.body.scrollHeight);")
             link = browser.find_element(By.XPATH,"//*").text
             all_numbers = re.findall(r'\d{10,12}', link)
@@ -206,12 +206,7 @@ def fb_run():
                 element.click()
             except:
                 pass
-            # browser.implicitly_wait(10)
-            # link = browser.find_element(By.XPATH,"//span[contains(text(),'View') and contains(text(),'more comment')]").click() # find the link
-            browser.implicitly_wait(10)
-            # link = browser.find_element(By.XPATH,"//span[contains(text(),'About')]") # find the link
-            # webdriver.ActionChains(browser).move_to_element(link).perform()
-            time.sleep(3)
+            browser.implicitly_wait(5)
             link = browser.find_element(By.XPATH,"//*").text
             all_numbers = re.findall(r'\d{10,12}', link)
             numbers.extend(all_numbers)
@@ -254,25 +249,37 @@ def send_whatsapp(all_numbers):
     # message = " היי , מה נשמע? ראיתי את המספר שלך בקבוצת דוגווקרים בתל אביב. \
     #     אנחנו גרים על בתל אביב בן אביגדור ומחפשים מישהו שיגיע 2-3 ימים בשבוע בצהריים. הכלב בן שנה וחצי, אנרגטי, ידידותי עם כלבים אחרים. מחפשים לטווח ארוך. "
     # " נשמח לקבל פרטים נוספים אם רלוונטי. תודה רבה! "
-    message = """ היי, אשמח להצעת מחיר למעבר של דירת 2 חדרים. מזרן 160,מיטה, שולחן,6 כיסאות, מכונת כביסה, ארון 200על80 וארון 180על60 ואיזור ה20 ארגזים. מקומה 1 עם מעלית בן אביגדור תל אביב
-    לקומה 3 עם מעלית בשלמה המלך תל אביב מרחק של 3 קמ. המעבר ביום שישי ה9.6 בבוקר. תודה רבה. """
+    message = """ היי מה נשמע? אשמח אם תוכל לשלוח לי בוואטסאפ הצעת מחיר למעבר של דירת 2 חדרים. מזרן 160,מיטה, שולחן,6 כיסאות, מכונת כביסה, ארון 200על80 וארון 180על60 ואיזור ה20 ארגזים. מקומה 1 עם מעלית בן אביגדור תל אביב
+    לקומה 3 עם מעלית בשלמה המלך תל אביב מרחק של 3 קמ. המעבר ביום שישי ה9.6 בבוקר. תודה רבה.
+      לא צריך לפרק או להרכיב שום דבר. אני אפרק וארכיב, הכל נכנס למעלית למעט המיטה והמזרן שבגודל 160*200 רק להעביר.  """
     for index, number in enumerate(all_numbers):
-        # run twice to make sure it works
+        # run twice
         for i in range(2):
-            # Goes to site
+        # Goes to site
             site = f"https://wa.me/{number}?text={message}"
             browser.get(site)
-            if index == 0:
+            if index == 0 and i == 0:
                 click_pyautogui(732 , 165)
-                time.sleep(1)
+                time.sleep(2)
                 click_pyautogui(1025 , 225)
-            browser.find_element(By.XPATH,"//span[contains(text(),'Continue to Chat')]").click()
-            time.sleep(5)
+            try:
+                browser.find_element(By.XPATH,"//span[contains(text(),'Continue to Chat')]").click()
+            except:
+                pass
+        time.sleep(5)
         # Clicks on the button to send message
         click_pyautogui(1880 , 1000)
-        time.sleep(5)
+        time.sleep(1)
+        # remove number from filename.txt
+        with open("filename.txt", "r+") as file:
+            lines = file.readlines()
+            file.seek(0)
+            for line in lines:
+                if number not in line:
+                    file.write(line)
+            file.truncate()
 
 if __name__ == '__main__':
-    fb_run()
+    # fb_run()
     txt_read = read_txt_file('filename.txt')
     send_whatsapp(txt_read)
