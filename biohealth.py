@@ -159,24 +159,10 @@ prefs = {"protocol_handler": {"excluded_schemes": {"<INSERT PROTOCOL NAME>": "fa
 option.add_experimental_option("prefs", prefs)
 browser = webdriver.Chrome(executable_path = r'chromedriver.exe', options=option)#, options=option)
 
-import yaml
 def fb_run():
-    # read yaml cred.yaml
-    with open('cred.yaml') as f:
-        cred = yaml.load(f, Loader=yaml.FullLoader)
-    browser.get("http://facebook.com")
+    browser.get("https://www.iati.co.il/database-search.php?sector=1&medfield=0&category=0&subcategory=0&searchval=")
     browser.maximize_window()
     wait = WebDriverWait(browser, 30)
-    email_field = wait.until(EC.visibility_of_element_located((By.NAME, 'email')))
-    email_field.send_keys(cred['EMAIL'])
-    pass_field = wait.until(EC.visibility_of_element_located((By.NAME, 'pass')))
-    pass_field.send_keys(cred['PASSWORD'])
-    pass_field.send_keys(Keys.RETURN)
-
-    time.sleep(5)
-
-    # browser.get('https://www.facebook.com/groups/DogWalkerTLV/') # once logged in, free to open up any target page
-    browser.get('https://www.facebook.com/groups/1629283237109586/') # הובלות, הובלות קטנות, הובלות דירות, הרכבות, מובילים ממומלצים, חיפוש מובילים
 
     time.sleep(5)
 
@@ -283,5 +269,5 @@ def send_whatsapp(all_numbers):
 
 if __name__ == '__main__':
     fb_run()
-    txt_read = read_txt_file('filename.txt')
-    send_whatsapp(txt_read)
+    # txt_read = read_txt_file('filename.txt')
+    # send_whatsapp(txt_read)

@@ -9,3 +9,4 @@ git add .
 read -p "Please enter commit message: " MESSAGE
 git commit -m "$MESSAGE"
 git push # push nir branch
+read -p "Please any key to continue: "
