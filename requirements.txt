@@ -1,5 +1,9 @@
-beautifulsoup4==4.11.1
-pandas==1.5.1
-pyautogui==0.9.53
+beautifulsoup4==4.12.2
+keyboard==0.13.5
+mss==9.0.1
+pandas==2.0.2
+pyautogui==0.9.54
+pynput==1.7.6
 PyYAML==6.0
-selenium==4.6.0
+PyYAML
+selenium==4.9.1

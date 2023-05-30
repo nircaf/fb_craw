@@ -175,8 +175,7 @@ def fb_run():
 
     time.sleep(5)
 
-    # browser.get('https://www.facebook.com/groups/DogWalkerTLV/') # once logged in, free to open up any target page
-    browser.get('https://www.facebook.com/groups/1629283237109586/') # הובלות, הובלות קטנות, הובלות דירות, הרכבות, מובילים ממומלצים, חיפוש מובילים
+    browser.get(cred['URL'])
 
     time.sleep(5)
 

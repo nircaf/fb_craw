@@ -10,5 +10,4 @@ Create a **cred.yaml** file with your facebook credentials. This file will remai
 
 EMAIL: "Your email here" \
 PASSWORD: "Your password here" \
-URL: "Facebook group url link here" 
-  
+URL: "Facebook group url link here"
