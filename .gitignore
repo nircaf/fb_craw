@@ -1,2 +1,4 @@
-**.txt
+facebook_credentials.txt
 **.yaml
+.env
+/ignore/

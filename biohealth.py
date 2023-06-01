@@ -15,6 +15,30 @@ import pandas as pd
 import json
 import time
 import re
+# Import the os package
+import os
+
+# Import the openai package
+import openai
+
+# From the IPython.display package, import display and Markdown
+from IPython.display import display, Markdown
+
+# load env
+from dotenv import load_dotenv
+load_dotenv()
+# Set openai.api_key to the OPENAI environment variable
+openai.api_key = os.environ["OPENAI"]
+
+def ask_gpt(promt):
+    response = openai.ChatCompletion.create(
+              model="gpt-3.5-turbo",
+              messages=[ {"role": "system", 'content': 'answer y or n. one letter answers. email address?'},
+                  {"role": "user", "content": promt},
+              ]
+              )
+    res = response["choices"][0]["message"]["content"]
+    return res
 
 def openComment(browser):
     moreComment = browser.find_elements(By.XPATH, "//span[contains(@class,'d2edcug0 hpfvmrgz qv66sw1b c1et5uql oi732d6d ik7dh3pa ht8s03o8 a8c37x1j keod5gw0 nxhoafnm aigsh9s9 d9wwppkn fe6kdd0r mau55g9w c8b282yb iv3no6db jq4qci2q a3bd9o3v lrazzd5p m9osqain') and starts-with(text(), 'View') and contains(text(), 'more comment')]")
@@ -159,60 +183,86 @@ prefs = {"protocol_handler": {"excluded_schemes": {"<INSERT PROTOCOL NAME>": "fa
 option.add_experimental_option("prefs", prefs)
 browser = webdriver.Chrome(executable_path = r'chromedriver.exe', options=option)#, options=option)
 
-def fb_run():
-    browser.get("https://www.iati.co.il/database-search.php?sector=1&medfield=0&category=0&subcategory=0&searchval=")
-    browser.maximize_window()
+import tqdm
+def fb_run(url= ''):
+    browser.get(url)
+    # get url.split('.')[1] to get the domain name
+    domain_name = url.split('.')[1]
+    # browser.maximize_window()
     wait = WebDriverWait(browser, 30)
 
-    time.sleep(5)
+    href_values = get_links_from_page(browser)
 
-    from selenium.webdriver.common.action_chains import ActionChains
-
-    Bool_try = True
-    numbers = []
-    for i in range(30):
-        print(f' i = {i}')
-        for run in range(4):
-            print(f'run: {run+i}')
-            try:
-                xpath_ele = "//span[contains(text(),'View') and contains(text(),'more comment')]"
-                # get all elements with the xpath
-                elements = browser.find_elements(By.XPATH, xpath_ele)
-                # click the last element
-                elements[-1].click()
-                # link = browser.find_element(By.XPATH,xpath_ele).click() # find the link
-            except:
-                pass
-            browser.implicitly_wait(3)
-            browser.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-            link = browser.find_element(By.XPATH,"//*").text
-            all_numbers = re.findall(r'\d{10,12}', link)
-            numbers.extend(all_numbers)
-            try:
-                # close post
-                element = browser.find_element(By.XPATH, '//*[contains(@d, "M18.707")]')
-                element.click()
-            except:
-                pass
-            browser.implicitly_wait(5)
-            link = browser.find_element(By.XPATH,"//*").text
-            all_numbers = re.findall(r'\d{10,12}', link)
-            numbers.extend(all_numbers)
-
-    print(numbers)
-    res = [*set(numbers)]
-    print("List after removing duplicate elements: ", res)
-    # clean with open("filename.txt", "r+") as file:
-    with open("filename.txt", "w") as file:
-        pass
-    for number in numbers:
-        if number[:3]=='972' and len(number)==12:
-            write_num_to_txt(number)
+    # get only values with '/company/'
+    href_values = [x for x in href_values if '/company/' in x]
+    # href_values from 535
+    # run tqdm with
+    # go to the href values
+    for href in tqdm.tqdm(href_values):
+        wait = WebDriverWait(browser, 10)
+        browser.get(href)
+        try:
+            href_values2 = get_links_from_page(browser)
+            # remove links of [twitter, facebook, linkedin, youtube,volle domain_name]
+            href_values2 = [x for x in href_values2 if not any(y in x for y in ['twitter', 'facebook', 'linkedin', 'youtube', domain_name,'volle'])]
+            # go to the href values
+            for href2 in href_values2:
+                wait = WebDriverWait(browser, 10)
+                browser.get(href2)
+                try:
+                    # find email address in link
+                    email = re.findall(r'[\w\.-]+@[\w\.-]+', browser.page_source)
+                    # remove duplicates from email
+                    email = list(dict.fromkeys(email))
+                    if len(email) > 0:
+                        # add all emails in email to list_emails
+                        for e in email:
+                            if is_email(e):
+                                # write email to file
+                                with open(f"{domain_name}.txt", "a") as file:
+                                    file.write(e + '\n')
+                except:
+                    continue
+        except:
             continue
-        elif number[0]=='0' and len(number)==10:
-            number = number[2:]
-            number = '9725' + number
-            write_num_to_txt(number)
+    # read file to list_emails
+    with open(f"{domain_name}.txt", "r") as file:
+        list_emails = file.read().split('\n')
+    # remove duplicates from list_emails
+    list_emails = list(dict.fromkeys(list_emails))
+    # write list_emails to file
+    with open(f"{domain_name}.txt", "w") as file:
+        for email in list_emails:
+            file.write(email + '\n')
+
+
+import re
+
+def is_email(string):
+    pattern = r'^[\w\.-]+@[\w\.-]+\.\w+$'
+    http_endings = [
+    ".com", ".net", ".org", ".edu", ".gov", ".mil", ".int", ".io", ".co", ".ai", ".app",
+    ".biz", ".info", ".me", ".us", ".tv", ".ca", ".uk", ".au", ".in", ".de", ".jp", ".fr",
+    ".ru", ".ch", ".it", ".nl", ".se", ".no", ".es", ".pl", ".br", ".mx", ".za", ".nz",
+    ".sg", ".kr", ".tr", ".be", ".at", ".dk", ".fi", ".hu", ".cz", ".gr", ".pt", ".ar",
+    ".cl", ".co.jp", ".ie", ".cn", ".tw", ".th", ".my", ".vn", ".id", ".il", ".ro", ".bg",
+    ".hr", ".sk", ".lt", ".si", ".lv", ".ee", ".rs", ".ba", ".mk", ".is", ".cy", ".lu",
+    ".by", ".ua", ".kz", ".md", ".ge", ".am", ".az", ".kg", ".uz", ".tj", ".tm", ".af",
+    ".np", ".lk", ".bd", ".pk", ".ir", ".sa", ".ae", ".kw", ".qa", ".om", ".bh", ".ye",
+    ".jo", ".lb", ".sy", ".ps", ".kw", ".iq", ".ir", ".tr", ".gr", ".cy", ".dk", ".at"
+    # Add more endings here if needed
+]
+    if re.match(pattern, string) and string.endswith(tuple(http_endings)):
+        return True
+    else:
+        return False
+
+def get_links_from_page(browser):
+    # Find all elements with href attribute
+    elements = browser.find_elements(By.XPATH,"//a[@href]")
+    # Retrieve the href values
+    href_values = [element.get_attribute("href") for element in elements]
+    return href_values
 
 
 def read_txt_file(file_path):
@@ -267,7 +317,123 @@ def send_whatsapp(all_numbers):
                     file.write(line)
             file.truncate()
 
+def sent_emails(txt_read):
+    for email in txt_read.split('\n'):
+        if email:
+            send_email(email)
+
+import yaml
+# read yaml cred.yaml
+with open('cred.yaml') as f:
+    cred = yaml.load(f, Loader=yaml.FullLoader)
+
+def send_email(email_txt):
+    import email, smtplib, ssl
+
+    from email import encoders
+    from email.mime.base import MIMEBase
+    from email.mime.multipart import MIMEMultipart
+    from email.mime.text import MIMEText
+
+    subject = "Data Profficiency Request"
+    body = f"""Hi.
+    \n Thanks, \n Nir"""
+    sender_email = cred['email']
+    recipients = email_txt
+    receiver_email = ", ".join(recipients) if type(recipients) == list else recipients
+    password = cred['password']
+
+    # Create a multipart message and set headers
+    message = MIMEMultipart()
+    message["From"] = sender_email
+    message["To"] = receiver_email
+    message["Subject"] = subject
+    # message["Bcc"] = ''  # Recommended for mass emails
+
+    # Add body to email
+    message.attach(MIMEText(body, "plain"))
+
+    # Add attachment to message and convert message to string
+    text = message.as_string()
+
+    # Log in to server using secure context and send email
+    context = ssl.create_default_context()
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
+        server.login(sender_email, password)
+        server.sendmail(sender_email, receiver_email, text)
+
+import os
+import yaml
+import base64
+from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
+from google.oauth2.credentials import Credentials
+
+
+def send_emailg(email_txt):
+    # Load credentials from the cred.yaml file
+    with open('cred.yaml', 'r') as f:
+        cred = yaml.safe_load(f)
+
+    # Set up necessary variables
+    sender_email = cred['email']
+    recipients = email_txt
+    receiver_email = ", ".join(recipients) if isinstance(recipients, list) else recipients
+    password = cred['password']
+
+    # Create the email message
+    message = create_message(sender_email, receiver_email, 'Subject', 'Message body')
+
+    try:
+        # Authorize and create the Gmail API service
+        credentials = Credentials.from_authorized_user_file('ignore/cred_g.json')
+        service = build('gmail', 'v1', credentials=credentials)
+
+        # Send the email
+        send_message(service, 'me', message)
+        print('Email sent successfully!')
+    except HttpError as error:
+        print(f'An error occurred: {error}')
+
+
+def create_message(sender, receiver, subject, message_text):
+    message = {
+        'raw': base64.urlsafe_b64encode(
+            f"From: {sender}\r\n"
+            f"To: {receiver}\r\n"
+            f"Subject: {subject}\r\n"
+            "\r\n"
+            f"{message_text}"
+        ).decode("utf-8")
+    }
+    return message
+
+
+def send_message(service, user_id, message):
+    try:
+        message = service.users().messages().send(userId=user_id, body=message).execute()
+        return message
+    except HttpError as error:
+        print(f'An error occurred: {error}')
+
+
+
+
+
+
+
+
 if __name__ == '__main__':
-    fb_run()
-    # txt_read = read_txt_file('filename.txt')
+    # url = "https://www.iati.co.il/database-search.php?sector=1&medfield=0&category=0&subcategory=0&searchval="
+    # fb_run(url)
+    txt_read = read_txt_file('iati.txt')
+    # run over txt_read
+    txt_split = txt_read.split('\n')
+    for txt in txt_read.split('\n'):
+        # res = ask_gpt(txt)
+        if txt:
+            # Usage example
+            # Call the send_email function with the recipients
+            recipients = [txt]
+            send_emailg(recipients)
     # send_whatsapp(txt_read)
