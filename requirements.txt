@@ -5,5 +5,4 @@ pandas==2.0.2
 pyautogui==0.9.54
 pynput==1.7.6
 PyYAML==6.0
-PyYAML
 selenium==4.9.1
