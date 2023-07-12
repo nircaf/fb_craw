@@ -436,4 +436,3 @@ if __name__ == '__main__':
             # Call the send_email function with the recipients
             recipients = [txt]
             send_emailg(recipients)
-    # send_whatsapp(txt_read)

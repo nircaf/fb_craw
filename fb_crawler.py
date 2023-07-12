@@ -159,12 +159,45 @@ prefs = {"protocol_handler": {"excluded_schemes": {"<INSERT PROTOCOL NAME>": "fa
 option.add_experimental_option("prefs", prefs)
 browser = webdriver.Chrome(executable_path = r'chromedriver.exe', options=option)#, options=option)
 
+def numbers_from_web(url):
+    browser.get(url)
+    wait = WebDriverWait(browser, 30)
+    # get all text in the page
+    text = browser.find_element(By.XPATH,"//*").text
+    # look for numbers in the text and save them in a list
+    all_numbers = re.findall(r'\d{10,12}', text)
+    # extend to numbers in pattern XXX-XXXXXXX
+    all_numbers.extend(re.findall(r'\d{3}-\d{7}', text))
+    # remove duplicates
+    res = [*set(all_numbers)]
+    txt_file = f"{url.split('.')[1]}.txt"
+    # clean with open("filename.txt", "r+") as file:
+    with open(txt_file, "w") as file:
+        file.write('')
+    # write numbers to txt file
+    for number in res:
+        if number[:3]=='972' and len(number)==12:
+            write_num_to_txt(number, txt_file)
+            continue
+        elif number[0]=='0' and len(number)==10:
+            number = number[2:]
+            number = '9725' + number
+            write_num_to_txt(number, txt_file)
+        # if number is XXX-XXXXXXX
+        elif number[3]=='-' and len(number)==11:
+            number = number.replace('-','')
+            number = number[1:]
+            number = '972' + number
+            write_num_to_txt(number, txt_file)
+
+
+
 import yaml
-def fb_run():
+def fb_run(url):
     # read yaml cred.yaml
     with open('cred.yaml') as f:
         cred = yaml.load(f, Loader=yaml.FullLoader)
-    browser.get("http://facebook.com")
+    browser.get("https://www.facebook.com")
     browser.maximize_window()
     wait = WebDriverWait(browser, 30)
     email_field = wait.until(EC.visibility_of_element_located((By.NAME, 'email')))
@@ -175,7 +208,7 @@ def fb_run():
 
     time.sleep(5)
 
-    browser.get(cred['URL'])
+    browser.get(url)
 
     time.sleep(5)
 
@@ -183,7 +216,7 @@ def fb_run():
 
     Bool_try = True
     numbers = []
-    for i in range(30):
+    for i in range(10):
         print(f' i = {i}')
         for run in range(4):
             print(f'run: {run+i}')
@@ -209,10 +242,10 @@ def fb_run():
                 pass
             browser.implicitly_wait(5)
             link = browser.find_element(By.XPATH,"//*").text
-            all_numbers = re.findall(r'\d{10,12}', link)
-            numbers.extend(all_numbers)
+            if link:
+                all_numbers = re.findall(r'\d{10,12}', link)
+                numbers.extend(all_numbers)
 
-    print(numbers)
     res = [*set(numbers)]
     print("List after removing duplicate elements: ", res)
     # clean with open("filename.txt", "r+") as file:
@@ -226,14 +259,19 @@ def fb_run():
             number = number[2:]
             number = '9725' + number
             write_num_to_txt(number)
+        elif number[3]=='-' and len(number)==11:
+            number = number.replace('-','')
+            number = number[1:]
+            number = '972' + number
+            write_num_to_txt(number)
 
 
 def read_txt_file(file_path):
     with open(file_path, 'r') as f:
         return f.read()
 
-def write_num_to_txt(number):
-    with open("filename.txt", "r+") as file:
+def write_num_to_txt(number, file_path='filename.txt'):
+    with open(file_path, "r+") as file:
         for line in file:
             if number in line:
                 break
@@ -250,9 +288,11 @@ def send_whatsapp(all_numbers):
     # message = " היי , מה נשמע? ראיתי את המספר שלך בקבוצת דוגווקרים בתל אביב. \
     #     אנחנו גרים על בתל אביב בן אביגדור ומחפשים מישהו שיגיע 2-3 ימים בשבוע בצהריים. הכלב בן שנה וחצי, אנרגטי, ידידותי עם כלבים אחרים. מחפשים לטווח ארוך. "
     # " נשמח לקבל פרטים נוספים אם רלוונטי. תודה רבה! "
-    message = """ היי מה נשמע? אשמח אם תוכל לשלוח לי בוואטסאפ הצעת מחיר למעבר של דירת 2 חדרים. מזרן 160,מיטה, שולחן,6 כיסאות, מכונת כביסה, ארון 200על80 וארון 180על60 ואיזור ה20 ארגזים. מקומה 1 עם מעלית בן אביגדור תל אביב
-    לקומה 3 עם מעלית בשלמה המלך תל אביב מרחק של 3 קמ. המעבר ביום שישי ה9.6 בבוקר. תודה רבה.
-      לא צריך לפרק או להרכיב שום דבר. אני אפרק וארכיב, הכל נכנס למעלית למעט המיטה והמזרן שבגודל 160*200 רק להעביר.  """
+    message = """ מה קורה?
+תגיד הובלה רק של ספה היום ב19:30 משדרות מסריק 2 לשלמה המלך 78 תל אביב. 1.3 ק"מ, 6 דקות נסיעה אני אעזור להעלות במדרגות. כמה זה יהיה? תודה רבה"""
+    # message = """  היי, מה שלומך? אנחנו מחפשים מנקה באופן קבוע פעם בשבועיים ל4 שעות. שלמה המלך תל אביב, דירת 2 חדרים. אשמח לקבל הצעת מחיר תודה רבה :) """
+    # message = """ היי, מה שלומך? אני מחפש הדברה בתל אביב שלמה המלך 78. תיקן אמריקאי דירת 2 חדרים קומה 3 עם מעלית 60 מ"ר למחר ב11 בבוקר. אשמח לדעת אם אפשרי וכמה זה יעלה. תודה רבה.
+    # """
     for index, number in enumerate(all_numbers):
         # run twice
         for i in range(2):
@@ -281,6 +321,9 @@ def send_whatsapp(all_numbers):
             file.truncate()
 
 if __name__ == '__main__':
-    fb_run()
+    fb_run('https://www.facebook.com/groups/420825184963260/?hoisted_section_header_type=recently_seen&multi_permalinks=2081779185534510')
     txt_read = read_txt_file('filename.txt')
+    # url = 'https://www.pro.co.il/pest-control/tel-aviv'
+    # numbers_from_web(url)
+    # txt_read = read_txt_file('pro.txt')
     send_whatsapp(txt_read)
