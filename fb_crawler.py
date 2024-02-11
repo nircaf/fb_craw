@@ -8,6 +8,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 import pyautogui
+from webdriver_manager.chrome import ChromeDriverManager
 
 # other necessary ones
 from bs4 import BeautifulSoup as bs
@@ -157,7 +158,9 @@ option.add_experimental_option("prefs", {
 })
 prefs = {"protocol_handler": {"excluded_schemes": {"<INSERT PROTOCOL NAME>": "false"}}}
 option.add_experimental_option("prefs", prefs)
-browser = webdriver.Chrome(executable_path = r'chromedriver.exe', options=option)#, options=option)
+browser = webdriver.Chrome(ChromeDriverManager().install(), options=option)
+
+# browser = webdriver.Chrome(executable_path = r'chromedriver.exe', options=option)#, options=option)
 
 def numbers_from_web(url):
     browser.get(url)
@@ -252,19 +255,22 @@ def fb_run(url):
     with open("filename.txt", "w") as file:
         pass
     for number in numbers:
-        if number[:3]=='972' and len(number)==12:
-            write_num_to_txt(number)
-            continue
-        elif number[0]=='0' and len(number)==10:
-            number = number[2:]
-            number = '9725' + number
-            write_num_to_txt(number)
-        elif number[3]=='-' and len(number)==11:
-            number = number.replace('-','')
-            number = number[1:]
-            number = '972' + number
-            write_num_to_txt(number)
+        num_to_txt(number)
 
+def num_to_txt(number):
+    # with re get only numbers
+    number = re.sub("[^0-9]", "", number)
+    if number[:3]=='972' and len(number)==12:
+        write_num_to_txt(number)
+    elif number[0]=='0' and len(number)==10:
+        number = number[2:]
+        number = '9725' + number
+        write_num_to_txt(number)
+    elif number[3]=='-' and len(number)==11:
+        number = number.replace('-','')
+        number = number[1:]
+        number = '972' + number
+        write_num_to_txt(number)
 
 def read_txt_file(file_path):
     with open(file_path, 'r') as f:
@@ -320,8 +326,50 @@ def send_whatsapp(all_numbers):
                     file.write(line)
             file.truncate()
 
+def wedding_venues():
+    mother_link = "https://urbanbridesmag.co.il/%D7%9E%D7%A7%D7%95%D7%9D-%D7%9C%D7%90%D7%99%D7%A8%D7%95%D7%A2.html"
+    browser.get(mother_link)
+    # browser.maximize_window()
+    wait = WebDriverWait(browser, 10)
+    numbers = []
+    # get all links in list
+    links = browser.find_elements(By.TAG_NAME, 'a')
+    # links to list
+    links2 = []
+    # Convert links to a list
+    for link in links:
+        links2.append(link.get_attribute('href'))
+    # remove duplicates
+    links2 = list(set(links2))
+    # go to each link in list
+    for link in links2:
+        # browser get link in new tab
+        browser.execute_script("window.open('');")
+        browser.switch_to.window(browser.window_handles[1])
+        browser.get(link)
+        try:
+            wait.until(EC.presence_of_element_located((By.CLASS_NAME, "phone")))
+            # get phone by class
+            phone = browser.find_element(By.CLASS_NAME, "phone").text
+            numbers.append(phone)
+        except:
+            pass
+        browser.close()
+        browser.switch_to.window(browser.window_handles[0])
+    # remove duplicates from numbers
+    numbers = list(set(numbers))
+    # clean 'filename.txt'
+    with open("filename.txt", "w") as file:
+        file.write("")
+    # write numbers to txt file
+    for number in numbers:
+        num_to_txt(number)
+
+import re
+
 if __name__ == '__main__':
-    fb_run('https://www.facebook.com/groups/420825184963260/?hoisted_section_header_type=recently_seen&multi_permalinks=2081779185534510')
+    wedding_venues()
+    # fb_run('https://www.facebook.com/groups/420825184963260/?hoisted_section_header_type=recently_seen&multi_permalinks=2081779185534510')
     txt_read = read_txt_file('filename.txt')
     # url = 'https://www.pro.co.il/pest-control/tel-aviv'
     # numbers_from_web(url)

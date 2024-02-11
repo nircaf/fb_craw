@@ -9,7 +9,7 @@ def branch_top_repositories(num_repos):
     # Load credentials from cred.yaml
     with open("cred_git.yaml", "r") as file:
         credentials = yaml.safe_load(file)
-    
+
     username = credentials["email"]
     password = credentials["password"]
 
@@ -31,7 +31,7 @@ def branch_top_repositories(num_repos):
     sign_in_link = driver.find_element(By.LINK_TEXT, "Sign in")
     sign_in_link.click()
 
-    # wait 
+    # wait
     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "login_field")))
     # Find and enter the username field
     username_field = driver.find_element(By.ID, "login_field")
