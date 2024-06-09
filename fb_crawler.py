@@ -16,6 +16,44 @@ import pandas as pd
 import json
 import time
 import re
+from oauth2client.service_account import ServiceAccountCredentials
+import gspread
+
+def sheets_connection():
+    scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive',
+            'https://www.googleapis.com/auth/drive.file', 'https://www.googleapis.com/auth/spreadsheets']
+
+    #Generate a json file by using service account auth in google developer console
+    '''
+    Link: https://console.developers.google.com/
+    1) Enable API Access for a Project if you haven’t done it yet.
+    2) Go to “APIs & Services > Credentials” and choose “Create credentials > Service account key”.
+    3) Fill out the form
+    4) Click “Create” and “Done”.
+    5) Press “Manage service accounts” above Service Accounts.
+    6) Press on ⋮ near recently created service account and select “Manage keys” and then click on “ADD KEY > Create new key”.
+    7) Select JSON key type and press “Create”.
+    8) Go to the google sheet and share the sheet with the email from service accounts.
+    '''
+
+    creds = ServiceAccountCredentials.from_json_keyfile_name(r'figures/lunar-tube-373814-cffbcc3ccf54.json', scope)
+    client = gspread.authorize(creds)
+    sheet = client.open_by_url("https://docs.google.com/spreadsheets/d/1XIfCgUnM0WOkenUCVeRGZHSeeTPQPSS_pMvDd-Wh3Ng")
+    worksheet = sheet.worksheet('Automation')
+    data = worksheet.get_all_values()
+    # to df
+    data = pd.DataFrame(data[1:], columns=data[0])
+    return data, worksheet
+
+def scape_to_data(data,link,phone,name,location):
+    # if link in data column links
+    if data['Links'].isin([link]).any() or data['Phone'].isin([phone]).any() or data['Name'].isin([name]).any() or data['Location'].isin([location]).any():
+        print(f'{link}, {phone}, {name}, {location} ALREADY in data!')
+        return data
+    else:
+        data = pd.concat([data, pd.DataFrame([{'Links': link, 'Phone': phone, 'Name': name, 'Location': location}])], ignore_index=True)
+        print(f'{link}, {phone}, {name}, {location} added!')
+    return data
 
 def openComment(browser):
     moreComment = browser.find_elements(By.XPATH, "//span[contains(@class,'d2edcug0 hpfvmrgz qv66sw1b c1et5uql oi732d6d ik7dh3pa ht8s03o8 a8c37x1j keod5gw0 nxhoafnm aigsh9s9 d9wwppkn fe6kdd0r mau55g9w c8b282yb iv3no6db jq4qci2q a3bd9o3v lrazzd5p m9osqain') and starts-with(text(), 'View') and contains(text(), 'more comment')]")
@@ -146,6 +184,7 @@ def archiveAtEnd(browser, reviewList):
                     print(f'written: {idx}_{r}')
 
 
+
 # set options as you wish
 option = Options()
 option.add_argument("--disable-infobars")
@@ -158,7 +197,9 @@ option.add_experimental_option("prefs", {
 })
 prefs = {"protocol_handler": {"excluded_schemes": {"<INSERT PROTOCOL NAME>": "false"}}}
 option.add_experimental_option("prefs", prefs)
-browser = webdriver.Chrome(ChromeDriverManager().install(), options=option)
+from selenium.webdriver.chrome.service import Service
+
+browser = webdriver.Chrome(service=Service(ChromeDriverManager().install()),options=option)
 
 # browser = webdriver.Chrome(executable_path = r'chromedriver.exe', options=option)#, options=option)
 
@@ -257,9 +298,28 @@ def fb_run(url):
     for number in numbers:
         num_to_txt(number)
 
-def num_to_txt(number):
+
+def phone_to_num(number2):
     # with re get only numbers
-    number = re.sub("[^0-9]", "", number)
+    number = re.sub("[^0-9]", "", number2)
+    if number == '':
+        return
+    if number[:3]=='972' and len(number)==12:
+        pass
+    elif number[0]=='0' and len(number)==10:
+        number = number[2:]
+        number = '9725' + number
+    elif number[3]=='-' and len(number)==11:
+        number = number.replace('-','')
+        number = number[1:]
+        number = '972' + number
+    return number
+
+def num_to_txt(number2):
+    # with re get only numbers
+    number = re.sub("[^0-9]", "", number2)
+    if number == '':
+        return
     if number[:3]=='972' and len(number)==12:
         write_num_to_txt(number)
     elif number[0]=='0' and len(number)==10:
@@ -291,14 +351,7 @@ def click_pyautogui(x, y):
 
 def send_whatsapp(all_numbers):
     all_numbers = all_numbers.split('\n')[:-1]
-    # message = " היי , מה נשמע? ראיתי את המספר שלך בקבוצת דוגווקרים בתל אביב. \
-    #     אנחנו גרים על בתל אביב בן אביגדור ומחפשים מישהו שיגיע 2-3 ימים בשבוע בצהריים. הכלב בן שנה וחצי, אנרגטי, ידידותי עם כלבים אחרים. מחפשים לטווח ארוך. "
-    # " נשמח לקבל פרטים נוספים אם רלוונטי. תודה רבה! "
-    message = """ מה קורה?
-תגיד הובלה רק של ספה היום ב19:30 משדרות מסריק 2 לשלמה המלך 78 תל אביב. 1.3 ק"מ, 6 דקות נסיעה אני אעזור להעלות במדרגות. כמה זה יהיה? תודה רבה"""
-    # message = """  היי, מה שלומך? אנחנו מחפשים מנקה באופן קבוע פעם בשבועיים ל4 שעות. שלמה המלך תל אביב, דירת 2 חדרים. אשמח לקבל הצעת מחיר תודה רבה :) """
-    # message = """ היי, מה שלומך? אני מחפש הדברה בתל אביב שלמה המלך 78. תיקן אמריקאי דירת 2 חדרים קומה 3 עם מעלית 60 מ"ר למחר ב11 בבוקר. אשמח לדעת אם אפשרי וכמה זה יעלה. תודה רבה.
-    # """
+    message = """היי, מה קורה? אנחנו מחפשים גן אירועים לחתונה של 100-150 מוזמנים במאי 2025. נשמח לקבל הצעת מחיר לאירוע ביום חול, בחמישי ערב ובשישי ערב. תודה רבה"""
     for index, number in enumerate(all_numbers):
         # run twice
         for i in range(2):
@@ -326,7 +379,71 @@ def send_whatsapp(all_numbers):
                     file.write(line)
             file.truncate()
 
-def wedding_venues():
+def update_google_sheets(data, worksheet):
+    # data['Id'] = data.index
+    data['Id'] = data.index + 1
+    # write data to google sheets
+    import numpy as np
+    # Replace non-compliant float values
+    data2 = data.replace([np.inf, -np.inf], np.nan)
+    data2 = data2.fillna(0)  # or any other value that makes sense in your context
+    # Now try to update the worksheet
+    worksheet.update([data2.columns.values.tolist()] + data2.values.tolist())
+
+def wedding_venues_10comm():
+    mother_link = "https://10comm.com/places.php?cat=2&area=center"
+    browser.get(mother_link)
+    # browser.maximize_window()
+    wait = WebDriverWait(browser, 10)
+    numbers = []
+    # get all links in list
+    links = browser.find_elements(By.TAG_NAME, 'a')
+    # links to list
+    links2 = []
+    # Convert links to a list
+    for link in links:
+        links2.append(link.get_attribute('href'))
+    # remove duplicates
+    links2 = list(set(links2))
+    data,worksheet = sheets_connection()
+    # go to each link in list
+    for link in links2:
+        # browser get link in new tab
+        browser.execute_script("window.open('');")
+        browser.switch_to.window(browser.window_handles[1])
+        browser.get(link)
+        phone = ''
+        try:
+            try:
+                # get phone by string regex 05x-xxxxxxx
+                phone = re.findall(r'05\d-[0-9]{7}', browser.page_source)[0]
+            except:
+                pass
+                # #click on 640 150
+                # click_pyautogui(640, 150)
+            # phone = phone_to_num(phone)
+            if phone == '':
+                continue
+            print(f'Phone found : {phone}')
+            # get first h1 element
+            wait.until(EC.visibility_of_element_located((By.ID, 'topBar_left_businessShourtName')))
+            h1_element = browser.find_element(By.ID, 'topBar_left_businessShourtName')
+            name = h1_element.text
+            # find link that contains "waze" in href
+            location = browser.find_element(By.CLASS_NAME,"topBar_left_address_moreDetails_row")
+            location = location.text
+            # remove כתובת if exists
+            location = re.sub(r'כתובת', '', location)
+            data = scape_to_data(data,link,phone,name,location)
+            time.sleep(2)
+        except:
+            time.sleep(2)
+            pass
+        browser.close()
+        browser.switch_to.window(browser.window_handles[0])
+    update_google_sheets(data,worksheet)
+
+def wedding_venues_urbanbridesmag():
     mother_link = "https://urbanbridesmag.co.il/%D7%9E%D7%A7%D7%95%D7%9D-%D7%9C%D7%90%D7%99%D7%A8%D7%95%D7%A2.html"
     browser.get(mother_link)
     # browser.maximize_window()
@@ -341,37 +458,101 @@ def wedding_venues():
         links2.append(link.get_attribute('href'))
     # remove duplicates
     links2 = list(set(links2))
+    data,worksheet = sheets_connection()
     # go to each link in list
     for link in links2:
         # browser get link in new tab
         browser.execute_script("window.open('');")
         browser.switch_to.window(browser.window_handles[1])
         browser.get(link)
+        phone = ''
         try:
             wait.until(EC.presence_of_element_located((By.CLASS_NAME, "phone")))
             # get phone by class
             phone = browser.find_element(By.CLASS_NAME, "phone").text
+            phone = phone_to_num(phone)
             numbers.append(phone)
+            print(f'Phone found : {phone}')
+            # get first h1 element
+            h1_element = browser.find_element(By.TAG_NAME, 'h1')
+            name = h1_element.text
+            # find link that contains "waze" in href
+            location = browser.find_element(By.XPATH, "//a[contains(@href, 'waze')]")
+            location = location.text
+            # remove כתובת if exists
+            location = re.sub(r'כתובת', '', location)
+            data = scape_to_data(data,link,phone,name,location)
         except:
             pass
         browser.close()
         browser.switch_to.window(browser.window_handles[0])
-    # remove duplicates from numbers
-    numbers = list(set(numbers))
-    # clean 'filename.txt'
-    with open("filename.txt", "w") as file:
-        file.write("")
-    # write numbers to txt file
-    for number in numbers:
-        num_to_txt(number)
+    update_google_sheets(data,worksheet)
+
+def test_phone_num_online(number):
+    browser.get('https://2chat.co/tools/whatsapp-checker')
+    # find id :R6jajal6dak6:
+    element = browser.find_element(By.ID, ':R6jajal6dak6:')
+    from selenium.webdriver.common.keys import Keys
+    # Get the length of the input field's content
+    length = len(element.get_attribute('value'))
+    # Send backspace keys equal to the length of the input field's content
+    for _ in range(length):
+        element.send_keys(Keys.BACKSPACE)
+    # send number
+    element.send_keys(number)
+    button = browser.find_element(By.ID, ':R2lajal6dak6:').click()
+    time.sleep(8)
+    if 'This number is on NOT WhatsApp' in browser.page_source:
+        return False
+    return True
+
+
+def send_whatsapp_sheets():
+    data,worksheet = sheets_connection()
+    message = """היי, מה קורה? אנחנו מחפשים גן אירועים לחתונה של 100-150 מוזמנים במאי 2025. נשמח לקבל הצעת מחיר לאירוע ביום חול, בחמישי ערב ובשישי ערב. תודה רבה"""
+    bool_first = True
+    # run over data rows
+    for index, row in data.iterrows():
+        if '10comm' not in row['Links']:
+            continue
+        if row['Phone'][:2] != '05':
+            continue
+        # get phone number from row
+        number = phone_to_num(row['Phone'])
+        # check if number has whatsapp
+        # run twice
+        for i in range(1):
+            # Goes to site
+            site = f"https://wa.me/{number}?text={message} {row['Links']}"
+            browser.get(site)
+            if bool_first:
+                click_pyautogui(732 , 165)
+                time.sleep(2)
+                click_pyautogui(1025 , 225)
+                bool_first = False
+            try:
+                browser.find_element(By.XPATH,"//span[contains(text(),'Continue to Chat')]").click()
+            except:
+                pass
+        time.sleep(5)
+        for i in range(2):
+            click_pyautogui(1330 ,530)
+        # click on 1052 555 twice
+        for i in range(2):
+            click_pyautogui(1052, 555)
+            time.sleep(1)
+        # Clicks on the button to send message
+        click_pyautogui(1880 , 1000)
+        time.sleep(1)
+    pass
 
 import re
 
 if __name__ == '__main__':
-    wedding_venues()
+    # wedding_venues_10comm()
+    # wedding_venues_urbanbridesmag()
     # fb_run('https://www.facebook.com/groups/420825184963260/?hoisted_section_header_type=recently_seen&multi_permalinks=2081779185534510')
-    txt_read = read_txt_file('filename.txt')
     # url = 'https://www.pro.co.il/pest-control/tel-aviv'
     # numbers_from_web(url)
     # txt_read = read_txt_file('pro.txt')
-    send_whatsapp(txt_read)
+    send_whatsapp_sheets()
